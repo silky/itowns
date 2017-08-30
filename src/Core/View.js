@@ -10,8 +10,10 @@ import Camera from '../Renderer/Camera';
 import MainLoop from './MainLoop';
 import c3DEngine from '../Renderer/c3DEngine';
 import { STRATEGY_MIN_NETWORK_TRAFFIC } from './Layer/LayerUpdateStrategy';
+import Coordinates from './Geographic/Coordinates';
 import { GeometryLayer, Layer, defineLayerProperty } from './Layer/Layer';
 import Scheduler from './Scheduler/Scheduler';
+import DEMUtils from '../utils/DEMUtils';
 
 /**
  * Constructs an Itowns View instance
@@ -83,6 +85,8 @@ function View(crs, viewerDiv, options = {}) {
     this.onAfterRender = () => {};
 
     this._changeSources = new Set();
+    this.avoidCollision = true; // By default we handle collision between camera and geometry layer
+    this.minDistanceCollision = 100; // Min allowed distance between camera and geometry
 }
 
 View.prototype = Object.create(EventDispatcher.prototype);
@@ -291,7 +295,30 @@ View.prototype.addLayer = function addLayer(layer, parentLayer) {
 View.prototype.notifyChange = function notifyChange(needsRedraw, changeSource) {
     this._changeSources.add(changeSource);
     this.mainLoop.scheduleViewUpdate(this, needsRedraw);
+    if (this.avoidCollision && (changeSource === undefined || changeSource.type != 'Mesh')) {
+        this.checkCollisionWithGeometryLayer();
+    }
 };
+
+
+/**
+ * Test for collision between camera and geometry layer (DTM/DSM) to adjust camera position
+ */
+View.prototype.checkCollisionWithGeometryLayer = function checkCollisionWithGeometryLayer() {
+    const camLocation = new Coordinates(this.referenceCrs, this.camera.camera3D.position).as('EPSG:4326');
+    if (this._layers[0] && this._layers[0] instanceof GeometryLayer) {
+        const elevationUnderCamera = DEMUtils.getElevationValueAt(this._layers[0], camLocation);
+        if (elevationUnderCamera != undefined) {
+            const difElevation = camLocation.altitude() - (elevationUnderCamera.z + this.minDistanceCollision);
+            // We move the camera to avoid collisions if too close to terrain
+            if (difElevation < 0) {
+                camLocation.setAltitude(elevationUnderCamera.z + this.minDistanceCollision);
+                this.camera.camera3D.position.copy(camLocation.as(this.referenceCrs).xyz());
+            }
+        }
+    }
+};
+
 
 /**
  * Get all layers, with an optionnal filter applied.
