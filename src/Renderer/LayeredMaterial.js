@@ -27,13 +27,13 @@ export const l_COLOR = 1;
 
 // from three.js packDepthToRGBA
 const UnpackDownscale = 255 / 256; // 0..1 -> fraction (excluding 1)
-export function unpack1K(color, factor) {
+export function unpack1K(color) {
     var bitSh = new THREE.Vector4(
         UnpackDownscale / (256.0 * 256.0 * 256.0),
         UnpackDownscale / (256.0 * 256.0),
         UnpackDownscale / 256.0,
         UnpackDownscale);
-    return bitSh.dot(color) * factor;
+    return bitSh.dot(color);
 }
 
 var getColorAtIdUv = function getColorAtIdUv(nbTex) {

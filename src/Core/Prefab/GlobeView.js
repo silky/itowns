@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 import View from '../View';
+import Capabilities from '../../Core/System/Capabilities';
 import { COLOR_LAYERS_ORDER_CHANGED } from '../../Renderer/ColorLayersOrdering';
 import RendererConstant from '../../Renderer/RendererConstant';
 import GlobeControls from '../../Renderer/ThreeExtended/GlobeControls';
@@ -427,13 +428,25 @@ GlobeView.prototype.getPickingPositionFromDepth = function getPickingPositionFro
     direction.applyMatrix4(matrix);
     direction.sub(ray.origin);
 
-    var angle = direction.angleTo(ray.direction);
+    const angle = direction.angleTo(ray.direction);
 
     depthRGBA.fromArray(buffer).divideScalar(255.0);
 
-    var depth = unpack1K(depthRGBA, 100000000.0) / Math.cos(angle);
+    let orthoZ = 0;
+    if (Capabilities.isLogDepthBufferSupported()) {
+        const gl_FragDepthEXT = unpack1K(depthRGBA);
+        const logDepthBufFC = 2.0 / (Math.log(camera.far + 1.0) / Math.LN2);
+        // invert function : gl_FragDepthEXT = log2(vFragDepth) * logDepthBufFC * 0.5;
+        orthoZ = Math.pow(2.0, 2.0 * gl_FragDepthEXT / logDepthBufFC);
+    } else {
+        let gl_FragCoord_Z = unpack1K(depthRGBA);
+        gl_FragCoord_Z = gl_FragCoord_Z * 2.0 - 1.0;
+        orthoZ = 2.0 * camera.near * camera.far / (camera.far + camera.near - gl_FragCoord_Z * (camera.far - camera.near));
+    }
 
-    pickWorldPosition.addVectors(camera.position, ray.direction.setLength(depth));
+    const length = orthoZ / Math.cos(angle);
+
+    pickWorldPosition.addVectors(camera.position, ray.direction.setLength(length));
 
     // Restore initial state
     this.changeRenderState(previousRenderState);
