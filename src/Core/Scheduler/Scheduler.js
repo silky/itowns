@@ -123,7 +123,13 @@ Scheduler.prototype.execute = function execute(command) {
     // parse host
     const layer = command.layer;
 
-    const host = layer.url ? new URL(layer.url).host : undefined;
+    let host;
+    try {
+        host = layer.url ? new URL(layer.url).host : undefined;
+    } catch (ex) {
+        host = undefined;
+    }
+
 
     command.promise = new Promise((resolve, reject) => {
         command.resolve = resolve;
