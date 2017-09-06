@@ -770,6 +770,8 @@ function GlobeControls(view, target, radius, options = {}) {
         lastRotation = [];
         if (enableTargetHelper) {
             this._view.notifyChange(true, cameraTargetOnGlobe);
+        } else {
+            this._view.notifyChange(true, this.camera);
         }
     };
 
@@ -1762,6 +1764,23 @@ GlobeControls.prototype.pickGeoPosition = function pickGeoPosition(mouse, y) {
     return new Coordinates('EPSG:4978', pickedPosition).as('EPSG:4326');
 };
 
+
+GlobeControls.prototype.readGeoPosition = function readGeoPosition(mouse, y) {
+    var screenCoords = {
+        x: mouse.clientX || mouse,
+        y: mouse.clientY || y,
+    };
+
+    var pickedPosition = this._view.getPickingPositionFromDepth(screenCoords, true);
+
+    if (!pickedPosition) {
+        return;
+    }
+
+    return new Coordinates('EPSG:4978', pickedPosition).as('EPSG:4326');
+};
+
+
 // # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 GlobeControls.prototype.reset = function reset() {
@@ -1776,6 +1795,10 @@ GlobeControls.prototype.reset = function reset() {
     this._view.notifyChange(true);
 
     this.updateCameraTransformation();
+};
+
+GlobeControls.prototype.getState = function getState() {
+    return state;
 };
 
 export default GlobeControls;

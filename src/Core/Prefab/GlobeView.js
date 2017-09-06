@@ -72,6 +72,7 @@ export const GLOBE_VIEW_EVENTS = {
     COLOR_LAYERS_ORDER_CHANGED,
 };
 
+let fullSizeDepthBuffer = null;
 
 export function createGlobeLayer(id, options) {
     // Configure tiles
@@ -266,6 +267,31 @@ function GlobeView(viewerDiv, coordCarto, options = {}) {
 
     this.mainLoop.addEventListener('command-queue-empty', fn);
 
+    this.callbacksOnAfterRender = [];
+
+    this.onAfterRender = () => {
+        for (const callBack of this.callbacksOnAfterRender) {
+            callBack();
+        }
+    };
+
+    if (this.controls) {
+        this.callbacksOnAfterRender.push(() => {
+            fullSizeDepthBuffer = null;
+            if (fullSizeDepthBuffer == null &&
+                this.controls &&
+                this.mainLoop.scheduler.commandsWaitingExecutionCount() == 0 &&
+                this.controls.getState() == -1) {
+                const g = this.mainLoop.gfxEngine;
+                const dim = g.getWindowSize();
+                const previousRenderState = this._renderState;
+                this.changeRenderState(RendererConstant.DEPTH);
+                fullSizeDepthBuffer = g.renderViewTobuffer(this, g.fullSizeRenderTarget, 0, 0, dim.x, dim.y);
+                this.changeRenderState(previousRenderState);
+            }
+        });
+    }
+
     this.notifyChange(true);
 }
 
@@ -391,8 +417,12 @@ const pickWorldPosition = new THREE.Vector3();
 const ray = new THREE.Ray();
 const direction = new THREE.Vector3();
 const depthRGBA = new THREE.Vector4();
-GlobeView.prototype.getPickingPositionFromDepth = function getPickingPositionFromDepth(mouse) {
-    const dim = this.mainLoop.gfxEngine.getWindowSize();
+GlobeView.prototype.getPickingPositionFromDepth = function getPickingPositionFromDepth(mouse, readFullBuffer) {
+    if (readFullBuffer && !fullSizeDepthBuffer) {
+        return;
+    }
+    const g = this.mainLoop.gfxEngine;
+    const dim = g.getWindowSize();
     mouse = mouse || dim.clone().multiplyScalar(0.5);
 
     var camera = this.camera.camera3D;
@@ -404,12 +434,15 @@ GlobeView.prototype.getPickingPositionFromDepth = function getPickingPositionFro
     const previousRenderState = this._renderState;
     this.changeRenderState(RendererConstant.DEPTH);
 
-    // Render to buffer
-    var buffer = this.mainLoop.gfxEngine.renderViewTobuffer(
-        this,
-        this.mainLoop.gfxEngine.fullSizeRenderTarget,
-        mouse.x, dim.y - mouse.y,
-        1, 1);
+    let buffer;
+    if (fullSizeDepthBuffer) {
+        const id = ((dim.y - mouse.y) * dim.x + mouse.x) * 4;
+        // read in buffer
+        buffer = fullSizeDepthBuffer.slice(id, id + 4);
+    } else {
+        // Render to buffer
+        buffer = g.renderViewTobuffer(this, g.fullSizeRenderTarget, mouse.x, dim.y - mouse.y, 1, 1);
+    }
 
     screen.x = (mouse.x / dim.x) * 2 - 1;
     screen.y = -(mouse.y / dim.y) * 2 + 1;
