@@ -243,10 +243,13 @@ export function updateLayeredMaterialNodeImagery(context, layer, node) {
                     // eslint-disable-next-line no-console
                     console.warn(`Imagery texture update error for ${node}: ${err}`);
                 }
-                node.layerUpdateState[layer.id].failure(Date.now());
-                window.setTimeout(() => {
-                    context.view.notifyChange(false, node);
-                }, node.layerUpdateState[layer.id].secondsUntilNextTry() * 1000);
+                const definitiveError = node.layerUpdateState[layer.id].errorCount > 4;
+                node.layerUpdateState[layer.id].failure(Date.now(), definitiveError);
+                if (!definitiveError) {
+                    window.setTimeout(() => {
+                        context.view.notifyChange(false, node);
+                    }, node.layerUpdateState[layer.id].secondsUntilNextTry() * 1000);
+                }
             }
         });
 }
