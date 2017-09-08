@@ -156,7 +156,7 @@ WMTS_Provider.prototype.tileInsideLimit = function tileInsideLimit(tile, layer, 
                 c = OGCWebServiceHelper.WMTS_WGS84Parent(coord, targetLevel);
             }
 
-            if (!(c.zoom in layer.options.tileMatrixSetLimits)) {
+            if (c.zoom < layer.options.zoom.min || c.zoom > layer.options.zoom.max) {
                 return false;
             }
             if (c.row < layer.options.tileMatrixSetLimits[c.zoom].minTileRow ||

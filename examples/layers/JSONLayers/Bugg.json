@@ -1,0 +1,124 @@
+{
+    "type": "color",
+    "protocol":   "wmts",
+    "id":         "BUGG",
+    "url":        "http://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts",
+    "networkOptions": {
+        "crossOrigin": "anonymous"
+    },
+    "updateStrategy": {
+        "type": "0",
+        "options": {}
+    },
+    "options": {
+        "attribution" : {
+            "name":"IGN",
+            "url":"http://www.ign.fr/"
+        },
+        "name": "LANDUSE.AGRICULTURE2010",
+        "mimetype": "image/png",
+        "tileMatrixSet": "PM",
+        "zoom" : {
+            "min": 2,
+            "max": 16
+        },
+        "tileMatrixSetLimits": {
+            "2": {
+                "minTileRow": 0,
+                "maxTileRow": 4,
+                "minTileCol": 0,
+                "maxTileCol": 4
+            },
+            "3": {
+                "minTileRow": 0,
+                "maxTileRow": 8,
+                "minTileCol": 0,
+                "maxTileCol": 8
+            },
+            "4": {
+                "minTileRow": 0,
+                "maxTileRow": 16,
+                "minTileCol": 0,
+                "maxTileCol": 16
+            },
+            "5": {
+                "minTileRow": 0,
+                "maxTileRow": 32,
+                "minTileCol": 0,
+                "maxTileCol": 32
+            },
+            "7" : {
+                "minTileRow" : 42,
+                "maxTileRow" : 47,
+                "minTileCol" : 62,
+                "maxTileCol" : 67
+            },
+            "6" : {
+                "minTileRow" : 21,
+                "maxTileRow" : 23,
+                "minTileCol" : 31,
+                "maxTileCol" : 33
+            },
+            "7" : {
+                "minTileRow" : 42,
+                "maxTileRow" : 47,
+                "minTileCol" : 62,
+                "maxTileCol" : 67
+            },
+            "8" : {
+                "minTileRow" : 85,
+                "maxTileRow" : 95,
+                "minTileCol" : 124,
+                "maxTileCol" : 134
+            },
+            "9" : {
+                "minTileRow" : 170,
+                "maxTileRow" : 191,
+                "minTileCol" : 248,
+                "maxTileCol" : 269
+            },
+            "10" : {
+                "minTileRow" : 341,
+                "maxTileRow" : 383,
+                "minTileCol" : 496,
+                "maxTileCol" : 539
+            },
+            "11" : {
+                "minTileRow" : 683,
+                "maxTileRow" : 766,
+                "minTileCol" : 993,
+                "maxTileCol" : 1079
+            },
+            "12" : {
+                "minTileRow" : 1367,
+                "maxTileRow" : 1532,
+                "minTileCol" : 1987,
+                "maxTileCol" : 2159
+            },
+            "13" : {
+                "minTileRow" : 2734,
+                "maxTileRow" : 3065,
+                "minTileCol" : 3974,
+                "maxTileCol" : 4319
+            },
+            "14" : {
+                "minTileRow" : 5469,
+                "maxTileRow" : 6130,
+                "minTileCol" : 7948,
+                "maxTileCol" : 8639
+            },
+            "15" : {
+                "minTileRow" : 10938,
+                "maxTileRow" : 12260,
+                "minTileCol" : 15897,
+                "maxTileCol" : 17278
+            },
+            "16" : {
+                "minTileRow" : 21876,
+                "maxTileRow" : 24521,
+                "minTileCol" : 31795,
+                "maxTileCol" : 34557
+            }
+        }
+    }
+}
