@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import togeojson from 'togeojson';
 import Extent from '../../Geographic/Extent';
 import Feature2Texture from '../../../Renderer/ThreeExtended/Feature2Texture';
-import GeoJSON2Feature from '../../../Renderer/ThreeExtended/GeoJSON2Feature';
+import GeoJSON2Features from '../../../Renderer/ThreeExtended/GeoJSON2Features';
 import Fetcher from './Fetcher';
 
 const supportedFormats = [
@@ -52,8 +52,8 @@ function createTextureFromVector(tile, layer) {
 
     if (layer.type == 'color') {
         const coords = tile.extent.as(layer.projection);
-        const result = { pitch: new THREE.Vector3(0, 0, 1) };
-        result.texture = Feature2Texture.createTextureFromGeoson(layer.geojson, tile.extent, 256, layer.style);
+        const result = { pitch: new THREE.Vector4(0, 0, 1, 1) };
+        result.texture = Feature2Texture.createTextureFromFeature(layer.feature, tile.extent, 256, layer.style);
         result.texture.extent = tile.extent;
         result.texture.coords = coords;
         result.texture.coords.zoom = tile.level;
@@ -115,20 +115,20 @@ export default {
                 const options = { buildExtent: true, crsIn: layer.projection };
 
                 if (layer.options.mimetype === 'vector/geojson') {
-                    layer.geojson = GeoJSON2Feature.parse(layer.reprojection, file, layer.extent, options);
-                    layer.extent = layer.geojson.extent || layer.geojson.geometry.extent;
+                    layer.feature = GeoJSON2Features.parse(layer.reprojection, file, layer.extent, options);
+                    layer.extent = layer.feature.extent || layer.feature.geometry.extent;
                 } else if (layer.options.mimetype === 'vector/kml') {
                     const geojson = togeojson.kml(file);
-                    layer.geojson = GeoJSON2Feature.parse(layer.reprojection, geojson, layer.extent, options);
-                    layer.extent = layer.geojson.extent;
+                    layer.feature = GeoJSON2Features.parse(layer.reprojection, geojson, layer.extent, options);
+                    layer.extent = layer.feature.extent;
                 } else if (layer.options.mimetype === 'vector/gpx') {
                     const geojson = togeojson.gpx(file);
                     layer.style.stroke = layer.style.stroke || 'red';
                     layer.extent = getExtentFromGpxFile(file);
-                    layer.geojson = GeoJSON2Feature.parse(layer.reprojection, geojson, layer.extent, options);
-                    layer.extent = layer.geojson.extent;
+                    layer.feature = GeoJSON2Features.parse(layer.reprojection, geojson, layer.extent, options);
+                    layer.extent = layer.feature.extent;
                 }
-                // GeoJSON2Feature.parse reprojects in local tile texture space
+                // GeoJSON2Features.parse reprojects in local tile texture space
                 // Rasterizer gives textures in this new reprojection space
                 // layer.projection is now reprojection
                 layer.originalprojection = layer.projection;
@@ -137,7 +137,7 @@ export default {
         }
     },
     tileInsideLimit(tile, layer) {
-        return layer.ready && tile.level >= layer.options.zoom.min && tile.level <= layer.options.zoom.max && layer.extent.intersect(tile.extent);
+        return tile.level >= layer.options.zoom.min && tile.level <= layer.options.zoom.max && layer.extent.intersectsExtent(tile.extent);
     },
     executeCommand(command) {
         const layer = command.layer;

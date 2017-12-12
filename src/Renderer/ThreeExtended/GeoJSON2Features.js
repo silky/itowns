@@ -106,7 +106,7 @@ const GeometryToCoordinates = {
     multiLineString(crsIn, crsOut, coordsIn, filteringExtent, options) {
         let result;
         for (const line of coordsIn) {
-            const l = this.lineString(crsIn, crsOut, line, options);
+            const l = this.lineString(crsIn, crsOut, line, filteringExtent, options);
             if (!l) {
                 return;
             }
@@ -132,6 +132,9 @@ const GeometryToCoordinates = {
 };
 
 function readGeometry(crsIn, crsOut, json, filteringExtent, options) {
+    if (json.coordinates.length == 0) {
+        return;
+    }
     switch (json.type.toLowerCase()) {
         case 'point':
             return GeometryToCoordinates.point(crsIn, crsOut, [json.coordinates], filteringExtent, options);
@@ -152,16 +155,19 @@ function readGeometry(crsIn, crsOut, json, filteringExtent, options) {
 }
 
 function readFeature(crsIn, crsOut, json, filteringExtent, options) {
+    if (options.filter && !options.filter(json.properties)) {
+        return;
+    }
     const feature = {};
     feature.geometry = readGeometry(crsIn, crsOut, json.geometry, filteringExtent, options);
 
     if (!feature.geometry) {
         return;
     }
-    feature.properties = {};
+    feature.properties = json.properties || {};
     // copy other properties
     for (const key of Object.keys(json)) {
-        if (['type', 'geometry'].indexOf(key.toLowerCase()) < 0) {
+        if (['type', 'geometry', 'properties'].indexOf(key.toLowerCase()) < 0) {
             feature.properties[key] = json[key];
         }
     }
